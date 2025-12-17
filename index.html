@@ -1,0 +1,1044 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trending Social Media Posts</title>
+    <!-- TikTok Official Embed Script -->
+    <script async src="https://www.tiktok.com/embed.js"></script>
+    <!-- Facebook SDK -->
+    <!-- Facebook SDK Script Only -->
+    <script async defer crossorigin="anonymous"
+        src="https://connect.facebook.net/en_US/sdk.js#xfbml=1&version=v18.0"></script>
+    <!-- Instagram Embed Script -->
+    <script async src="https://www.instagram.com/embed.js"></script>
+    <!-- X/Twitter Embed Script -->
+    <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Quicksand:wght@600;700&display=swap');
+
+        :root {
+            --bg-color: #F9F7F2;
+            /* Cream Lembut */
+            --primary-blue: #4DA8DA;
+            /* Sky Blue */
+            --accent-yellow: #FFCB47;
+            /* Warm Yellow */
+            --text-dark: #1B263B;
+            /* Navy Blue Gelap */
+            --white: #FFFFFF;
+            --shadow-soft: 0 10px 25px rgba(0, 0, 0, 0.05);
+            /* Floating shadow */
+            --radius-large: 24px;
+            /* Sangat tumpul */
+            --radius-pill: 50px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-color);
+            color: var(--text-dark);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            position: relative;
+        }
+
+        /* Header & Nav */
+        header {
+            position: relative;
+            background: var(--bg-color);
+            /* Match background */
+            padding: 20px 0 10px 0;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: center;
+            /* Center the logo */
+            align-items: center;
+        }
+
+        .header-container {
+            width: 100%;
+        }
+
+        .header-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            /* Space out logo and filter */
+            gap: 15px;
+            width: 100%;
+            max-width: 500px;
+            /* Match posts-container width */
+            margin: 0 auto;
+        }
+
+        .site-logo {
+            height: 48px;
+            width: auto;
+            object-fit: contain;
+        }
+
+        h1 {
+            font-family: 'Quicksand', sans-serif;
+            font-size: 1.5rem;
+            color: var(--primary-blue);
+            margin: 0;
+        }
+
+        /* Filter Pills */
+        .filter-container {
+            overflow-x: auto;
+            white-space: nowrap;
+            padding: 10px 0;
+            margin-bottom: 30px;
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            /* Center filters */
+            scrollbar-width: none;
+            /* Hide scrollbar Firefox */
+        }
+
+
+
+        /* Filter Dropdown System */
+        /* Filter Dropdown System */
+        .filter-wrapper {
+            position: relative;
+            /* margin-bottom removed as it is in header now */
+            display: flex;
+            align-items: center;
+            z-index: 100;
+        }
+
+        .filter-toggle-btn {
+            padding: 12px 28px;
+            background: var(--white);
+            border: 2px solid transparent;
+            border-radius: var(--radius-pill);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Quicksand', sans-serif;
+            font-weight: 700;
+            color: var(--text-dark);
+            font-size: 1rem;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .filter-toggle-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.12);
+        }
+
+        .filter-toggle-btn.active {
+            background: var(--primary-blue);
+            color: var(--white);
+        }
+
+        /* Dropdown Menu */
+        .platform-filters {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            /* Align right to match button edge */
+            /* transform: translateX(-50%) removed */
+            margin-top: 10px;
+            background: var(--white);
+            border-radius: 16px;
+            padding: 8px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            min-width: 200px;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.2s cubic-bezier(0.165, 0.84, 0.44, 1);
+        }
+
+        .platform-filters.show {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+            /* Simplified transform */
+        }
+
+        .platform-tab {
+            padding: 10px 20px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: background 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+
+        .platform-tab:hover {
+            background: #f0f7ff;
+            color: var(--primary-blue);
+        }
+
+        .platform-tab.active {
+            background: #e6f2ff;
+            color: var(--primary-blue);
+        }
+
+        .filter-btn,
+        .platform-tab {
+            padding: 10px 24px;
+            background: var(--white);
+            border: 2px solid transparent;
+            border-radius: var(--radius-pill);
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            font-family: 'Quicksand', sans-serif;
+            font-weight: 600;
+            color: var(--text-dark);
+            font-size: 0.95rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.03);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .filter-btn:hover,
+        .platform-tab:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.08);
+            color: var(--primary-blue);
+        }
+
+        .filter-btn.active,
+        .platform-tab.active {
+            background: var(--primary-blue);
+            color: var(--white);
+            box-shadow: 0 8px 15px rgba(77, 168, 218, 0.3);
+        }
+
+        /* Filter Actions (Special CTA color) */
+        .filter-special {
+            background: var(--accent-yellow);
+            color: var(--text-dark);
+        }
+
+        /* Vertical Feed Layout */
+        .posts-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 40px;
+            max-width: 500px;
+            /* Optimal reading width for vertical feed */
+            margin: 0 auto;
+        }
+
+        .post {
+            width: 100%;
+        }
+
+        /* Remove Media Queries for columns as we are now always 1 column */
+        .filter-container {
+            justify-content: flex-start;
+            /* Align start for scrolling on mobile */
+            padding: 10px 20px;
+            margin: 0 -20px 20px -20px;
+        }
+
+
+        /* The Vital Card */
+        .post {
+            background: var(--white);
+            border-radius: var(--radius-large);
+            padding: 0;
+            /* Removing internal padding to let content flow nicely, controlled by children */
+            margin-bottom: 24px;
+            /* Increased breathing room */
+            box-shadow: var(--shadow-soft);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            break-inside: avoid;
+            /* Prevent masonry breaking cards */
+            position: relative;
+            /* For badges */
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .post:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 30px rgba(0, 0, 0, 0.08);
+        }
+
+        /* Platform Badge (Overlay) */
+        .platform-badge {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(5px);
+            padding: 6px 12px;
+            border-radius: var(--radius-pill);
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--text-dark);
+            z-index: 10;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        /* Content Wrappers */
+        .post-embed {
+            background: transparent;
+            border: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            min-height: 500px;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+        }
+
+        /* Specific adjust for Facebook to fit rounded corners */
+        .fb-embed-container {
+            background: #fff;
+            overflow: hidden;
+            border-bottom-left-radius: var(--radius-large);
+            border-bottom-right-radius: var(--radius-large);
+        }
+
+        .post-content {
+            padding: 20px;
+            font-size: 1rem;
+            color: var(--text-dark);
+        }
+
+        /* Clean CTA Button */
+        .post-cta {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 12px 20px;
+            margin: 0 15px 15px 15px;
+            /* Spacing from bottom and sides */
+            background: var(--accent-yellow);
+            color: var(--text-dark);
+            text-decoration: none;
+            font-family: 'Quicksand', sans-serif;
+            font-weight: 700;
+            border-radius: var(--radius-pill);
+            transition: all 0.2s ease;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+
+        .post-cta:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+            filter: brightness(1.05);
+        }
+
+        /* Stats & Actions */
+        .post-footer {
+            padding: 15px 20px;
+            background: rgba(249, 247, 242, 0.5);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 1px solid rgba(0, 0, 0, 0.03);
+        }
+
+        .post-stats {
+            display: flex;
+            gap: 12px;
+            font-size: 0.85rem;
+            color: #666;
+            font-weight: 500;
+        }
+
+        .share-btn {
+            background: var(--accent-yellow);
+            color: var(--text-dark);
+            border: none;
+            padding: 8px 20px;
+            border-radius: var(--radius-pill);
+            font-family: 'Quicksand', sans-serif;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+
+        .share-btn:hover {
+            transform: scale(1.05) rotate(-2deg);
+        }
+
+        /* Loading Animation (Wifi Signal ish) */
+        .loader-wave {
+            display: inline-block;
+            position: relative;
+            width: 64px;
+            height: 64px;
+        }
+
+        .loader-wave div {
+            position: absolute;
+            border: 4px solid var(--primary-blue);
+            opacity: 1;
+            border-radius: 50%;
+            animation: loader-wave 1s cubic-bezier(0, 0.2, 0.8, 1) infinite;
+        }
+
+        .loader-wave div:nth-child(2) {
+            animation-delay: -0.5s;
+        }
+
+        @keyframes loader-wave {
+            0% {
+                top: 28px;
+                left: 28px;
+                width: 0;
+                height: 0;
+                opacity: 0;
+            }
+
+            4.9% {
+                top: 28px;
+                left: 28px;
+                width: 0;
+                height: 0;
+                opacity: 0;
+            }
+
+            5% {
+                top: 28px;
+                left: 28px;
+                width: 0;
+                height: 0;
+                opacity: 1;
+            }
+
+            100% {
+                top: 0px;
+                left: 0px;
+                width: 56px;
+                height: 56px;
+                opacity: 0;
+            }
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-dark);
+            grid-column: 1 / -1;
+            /* Fill all columns if in grid, but for masonry we might need js or just let it be */
+        }
+
+        /* Scroll to Top */
+        .scroll-top {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 50px;
+            height: 50px;
+            background: var(--primary-blue);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            box-shadow: 0 10px 20px rgba(77, 168, 218, 0.4);
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            z-index: 99;
+            font-size: 1.5rem;
+            border: none;
+        }
+
+        .scroll-top.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .scroll-top:hover {
+            transform: translateY(-5px);
+        }
+
+        /* Helper for wave divider */
+        .wave-divider {
+            width: 100%;
+            height: 20px;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 120' preserveAspectRatio='none'%3E%3Cpath d='M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V0H0V27.35A600.21,600.21,0,0,0,321.39,56.44Z' fill='%234DA8DA' fill-opacity='0.1'%3E%3C/path%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-size: cover;
+            margin: 20px 0;
+            display: none;
+            /* Optional use */
+        }
+
+        /* Show More Button */
+        .show-more-container {
+            display: flex;
+            justify-content: center;
+            margin: 30px 0 50px;
+            width: 100%;
+        }
+
+        .show-more-btn {
+            padding: 12px 36px;
+            background: var(--white);
+            border: 2px solid transparent;
+            border-radius: var(--radius-pill);
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            font-family: 'Quicksand', sans-serif;
+            font-weight: 700;
+            color: var(--primary-blue);
+            font-size: 1rem;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .show-more-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+            background: var(--primary-blue);
+            color: var(--white);
+        }
+
+        .show-more-btn:active {
+            transform: translateY(0);
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Facebook SDK Root (Must be after body tag) -->
+    <div id="fb-root"></div>
+
+    <!-- Sticky Header -->
+    <header>
+        <div class="container header-container">
+            <div class="header-content">
+                <img src="logo.png" alt="Karena Viral" class="site-logo">
+
+                <!-- Toggle Filter Wrapper Moved Here -->
+                <div class="filter-wrapper">
+                    <button id="filterToggle" class="filter-toggle-btn">
+                        <span id="currentFilterLabel">Semua</span>
+                        <span class="toggle-icon">▼</span>
+                    </button>
+
+                    <div id="platformFilters" class="platform-filters">
+                        <div class="platform-tab active" data-platform="all">
+                            Semua
+                        </div>
+                        <div class="platform-tab" data-platform="tiktok">
+                            TikTok
+                        </div>
+                        <div class="platform-tab" data-platform="instagram">
+                            Reels
+                        </div>
+                        <div class="platform-tab" data-platform="x">
+                            X
+                        </div>
+                        <div class="platform-tab" data-platform="facebook">
+                            Facebook
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+
+
+        <div class="posts-container" id="postsContainer">
+            <!-- Posts will be dynamically inserted here -->
+        </div>
+
+        <!-- Show More Button -->
+        <div class="show-more-container">
+            <button id="showMoreBtn" class="show-more-btn" style="display: none;">
+                Show More ✨
+            </button>
+        </div>
+
+        <!-- Scroll to Top Button -->
+        <button class="scroll-top" id="scrollTopBtn" title="Back to top">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="18 15 12 9 6 15"></polyline>
+            </svg>
+        </button>
+    </div>
+
+    <script>
+
+
+        // Platform icons mapping
+        const platformIcons = {
+            all: "📋",
+            twitter: "🐦",
+            instagram: "📷",
+            facebook: "📘",
+            threads: "🧵",
+            tiktok: "🎵"
+        };
+
+        // Initialize the app
+        document.addEventListener('DOMContentLoaded', function () {
+            // Fetch social media posts data from JSON
+            let socialPosts = [];
+
+            // Platform icons mapping for badge
+            const platformBadges = {
+                all: "🔥",
+                x: "🐦",
+                instagram: "📷",
+                facebook: "📘",
+                threads: "🧵",
+                tiktok: "🎵"
+            };
+
+            fetch('data.json')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (!data?.socialPosts) {
+                        throw new Error('Invalid data format: missing socialPosts array');
+                    }
+                    socialPosts = data.socialPosts;
+                    renderPosts();
+                })
+                .catch(error => {
+                    console.error('Error loading social posts:', error);
+                    const postsContainer = document.getElementById('postsContainer');
+                    if (postsContainer) {
+                        postsContainer.innerHTML = `
+                            <div class="empty-state">
+                                <div class="empty-state-icon">⚠️</div>
+                                <p>Error: ${error.message}</p>
+                            </div>
+                        `;
+                    }
+                });
+
+            console.log('DOM fully loaded and parsed');
+            // Additional safety check for embeds
+            if (!window.tiktokEmbed) {
+                console.warn('TikTok script not loaded - check network requests');
+            }
+            const postsContainer = document.getElementById('postsContainer');
+            const showMoreBtn = document.getElementById('showMoreBtn');
+
+            let currentFilter = 'all';
+            let currentFilteredPosts = [];
+            let renderedCount = 0;
+            const BATCH_SIZE = 5; // Reduced from 20 to 5 for better performance
+
+            // Show More listener
+            showMoreBtn.addEventListener('click', function () {
+                loadMorePosts();
+            });
+
+            // Set up filter toggle button
+
+
+            // Initial render
+            renderPosts();
+
+            // Comprehensive embed initialization function
+            // Lazy Load Embed Function
+            function loadEmbed(postElement, platform) {
+                if (postElement.dataset.loaded === 'true') return;
+                postElement.dataset.loaded = 'true';
+                console.log(`Lazy loading ${platform} embed...`);
+
+                if (platform === 'facebook') {
+                    const processFB = () => {
+                        if (typeof FB !== 'undefined') {
+                            try {
+                                const fbContainer = postElement.querySelector('.fb-post');
+                                // Force re-render by clearing internal FB state if needed or just parsing
+                                if (fbContainer) {
+                                    FB.XFBML.parse(postElement);
+                                }
+                            } catch (e) { console.warn('FB Parse Error', e); }
+                        } else {
+                            // Retry once if SDK is still loading
+                            setTimeout(() => processFB(), 1000);
+                        }
+                    };
+                    processFB();
+                }
+                else if (platform === 'instagram') {
+                    // Instagram unfortunately is global, but we can try process() which scans
+                    if (typeof instgrm !== 'undefined' && instgrm.Embeds) {
+                        instgrm.Embeds.process();
+                    } else {
+                        // Reload if missing
+                        const igScript = document.createElement('script');
+                        igScript.src = "https://www.instagram.com/embed.js";
+                        igScript.async = true;
+                        igScript.onload = () => { if (window.instgrm) window.instgrm.Embeds.process(); };
+                        document.body.appendChild(igScript);
+                    }
+                }
+                else if (platform === 'x') {
+                    const tweetContainer = postElement.querySelector('.twitter-tweet');
+                    if (tweetContainer && typeof twttr !== 'undefined' && twttr.widgets) {
+                        twttr.widgets.load(postElement);
+                    }
+                }
+                else if (platform === 'tiktok') {
+                    // TikTok specific element processing if available
+                    const tiktokQuote = postElement.querySelector('.tiktok-embed');
+                    if (window.tiktokEmbed && typeof window.tiktokEmbed.process === 'function' && tiktokQuote) {
+                        window.tiktokEmbed.process(tiktokQuote);
+                    } else {
+                        // Fallback: This is heavy but necessary if API isn't exposed nicely
+                        const tiktokScript = document.querySelector('script[src*="tiktok.com/embed.js"]');
+                        if (tiktokScript) {
+                            const newScript = document.createElement('script');
+                            newScript.src = "https://www.tiktok.com/embed.js";
+                            newScript.async = true;
+                            tiktokScript.parentNode.replaceChild(newScript, tiktokScript);
+                        }
+                    }
+                }
+            }
+
+            // Function to show TikTok fallback
+            function showTikTokFallback(embedElement) {
+                const container = embedElement.closest('.tiktok-embed-container');
+                if (container) {
+                    const fallback = container.querySelector('.tiktok-fallback');
+                    if (fallback) {
+                        fallback.style.display = 'block';
+                        embedElement.style.display = 'none';
+
+                        // Lazy load the iframe content
+                        const iframe = fallback.querySelector('iframe');
+                        if (iframe && iframe.dataset.src) {
+                            iframe.src = iframe.dataset.src;
+                        }
+
+                        console.log('TikTok fallback displayed');
+                    }
+                }
+            }
+
+            // Function to show Twitter/X fallback
+            function showTwitterFallback(embedElement) {
+                const container = embedElement.closest('.post-embed');
+                if (container) {
+                    // Get the tweet URL from data attribute or try to find it
+                    let tweetUrl = embedElement.getAttribute('data-tweet-url');
+                    if (!tweetUrl) {
+                        const link = embedElement.querySelector('a');
+                        if (link && link.href) {
+                            tweetUrl = link.href;
+                        }
+                    }
+
+                    if (tweetUrl) {
+                        // Create fallback content
+                        const fallback = document.createElement('div');
+                        fallback.className = 'twitter-fallback';
+                        fallback.style.cssText = `
+                            background: #000;
+                            color: #fff;
+                            padding: 20px;
+                            border-radius: 12px;
+                            text-align: center;
+                            border: 1px solid #333;
+                        `;
+
+                        fallback.innerHTML = `
+                            <div style="font-size: 24px; margin-bottom: 10px;">🐦</div>
+                            <p style="margin-bottom: 15px;">View this X/Twitter post</p>
+                            <a href="${tweetUrl}" target="_blank"
+                               style="display: inline-block; background: #1da1f2; color: white; padding: 10px 20px; border-radius: 20px; text-decoration: none; font-weight: 600;">
+                                Open on X/Twitter
+                            </a>
+                        `;
+
+                        embedElement.style.display = 'none';
+                        container.appendChild(fallback);
+                        console.log('Twitter/X fallback displayed');
+                    }
+                }
+            }
+
+
+
+            // Scroll to Top Interaction
+            const scrollTopBtn = document.getElementById('scrollTopBtn');
+            window.onscroll = function () {
+                if (document.body.scrollTop > 200 || document.documentElement.scrollTop > 200) {
+                    scrollTopBtn.classList.add('visible');
+                } else {
+                    scrollTopBtn.classList.remove('visible');
+                }
+            };
+
+            scrollTopBtn.addEventListener('click', function () {
+                window.scrollTo({
+                    top: 0,
+                    behavior: 'smooth'
+                });
+            });
+
+            // Handle Filter Toggle logic
+            const filterToggle = document.getElementById('filterToggle');
+            const platformFilters = document.getElementById('platformFilters');
+            const currentFilterLabel = document.getElementById('currentFilterLabel');
+            const platformTabs = document.querySelectorAll('.platform-tab');
+
+            // Open/Close Dropdown
+            filterToggle.addEventListener('click', function (e) {
+                e.stopPropagation();
+                platformFilters.classList.toggle('show');
+                this.classList.toggle('active');
+            });
+
+            // Close on click outside
+            document.addEventListener('click', function (e) {
+                if (!filterToggle.contains(e.target) && !platformFilters.contains(e.target)) {
+                    platformFilters.classList.remove('show');
+                    filterToggle.classList.remove('active');
+                }
+            });
+
+            // Handle Selection
+            platformTabs.forEach(tab => {
+                tab.addEventListener('click', function () {
+                    // Update Active State
+                    platformTabs.forEach(t => t.classList.remove('active'));
+                    this.classList.add('active');
+
+                    // Update Filter Logic
+                    currentFilter = this.dataset.platform;
+
+                    // Update Button Text
+                    // Directly get text content as the icon span is removed
+                    const text = this.textContent.trim();
+                    currentFilterLabel.innerHTML = text;
+
+                    // Close Dropdown
+                    platformFilters.classList.remove('show');
+                    filterToggle.classList.remove('active');
+
+                    // Re-render
+                    renderPosts();
+                });
+            });
+
+            function renderPosts() {
+                // Show loading state (using new Wifi wave animation)
+                if (socialPosts.length === 0) {
+                    postsContainer.innerHTML = `
+                        <div class="empty-state">
+                            <div class="loader-wave"><div></div><div></div></div>
+                            <p style="margin-top: 20px; font-weight: 500;">Memuat konten viral...</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                // Filter posts based on current filter
+                try {
+                    currentFilteredPosts = currentFilter === 'all'
+                        ? socialPosts
+                        : socialPosts.filter(post => post.platform === currentFilter);
+
+                    if (currentFilteredPosts.length === 0) {
+                        throw new Error('Belum ada postingan di kategori ini');
+                    }
+                } catch (error) {
+                    postsContainer.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-state-icon">🤔</div>
+                            <p>${error.message}</p>
+                        </div>
+                    `;
+                    showMoreBtn.style.display = 'none';
+                    return;
+                }
+
+                // Clear existing posts & reset count
+                postsContainer.innerHTML = '';
+                renderedCount = 0;
+
+                // Initial Load
+                loadMorePosts();
+            }
+
+            function loadMorePosts() {
+                // Determine next batch
+                const nextBatch = currentFilteredPosts.slice(renderedCount, renderedCount + BATCH_SIZE);
+
+                // Observer for Lazy Loading
+                const observerOptions = {
+                    root: null, // viewport
+                    rootMargin: '100px', // load 100px before appearing
+                    threshold: 0.1
+                };
+
+                const observer = new IntersectionObserver((entries, obs) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            const post = entry.target;
+                            const platform = post.dataset.platform;
+                            loadEmbed(post, platform);
+                            obs.unobserve(post);
+                        }
+                    });
+                }, observerOptions);
+
+                nextBatch.forEach(post => {
+                    const postElement = createPostElement(post);
+                    postElement.dataset.platform = post.platform;
+                    postsContainer.appendChild(postElement);
+                    observer.observe(postElement);
+                });
+
+                renderedCount += nextBatch.length;
+
+                // Update Button State
+                if (renderedCount >= currentFilteredPosts.length) {
+                    showMoreBtn.style.display = 'none';
+                } else {
+                    showMoreBtn.style.display = 'inline-flex';
+                    // Update Text with counts? "Show More (20 left)" - optional, keeping simple "Show More"
+                }
+            }
+
+            function createPostElement(post) {
+                const postDiv = document.createElement('div');
+                postDiv.className = 'post';
+
+                // Add Platform Badge (Top Right)
+                const badge = document.createElement('div');
+                badge.className = 'platform-badge';
+                badge.innerHTML = `${platformBadges[post.platform] || '📱'} ${post.platform.charAt(0).toUpperCase() + post.platform.slice(1)}`;
+                postDiv.appendChild(badge);
+
+                const hasMedia = post.media && post.media !== '';
+                const isEmbedded = post.isEmbedded || false;
+
+                let postContent = '';
+
+                if (isEmbedded) {
+                    if (post.platform === 'tiktok') {
+                        const videoIdMatch = post.embedUrl.split('/video/')[1];
+                        const videoId = videoIdMatch ? videoIdMatch.split('?')[0] : '';
+                        postContent = `
+                            <div class="post-embed tiktok-embed-container">
+                                <blockquote class="tiktok-embed" cite="${post.embedUrl}" data-video-id="${videoId}" style="max-width: 605px;min-width: 325px;">
+                                    <section></section>
+                                </blockquote>
+                                <div class="tiktok-fallback" style="display: none;">
+                                    <iframe data-src="https://www.tiktok.com/embed/v2/${videoId}"
+                                            style="width: 100%; height: 700px; border: none;"
+                                            allowfullscreen>
+                                    </iframe>
+                                </div>
+                            </div>
+                        `;
+                    } else if (post.platform === 'facebook') {
+                        postContent = `
+                            <div class="post-embed fb-embed-container">
+                                <div class="fb-post" data-href="${post.embedUrl}" data-width="500" data-show-text="true"></div>
+                            </div>
+                        `;
+                    } else if (post.platform === 'instagram') {
+                        const shortcode = post.embedUrl.match(/(?:\/p\/|\/reel\/|\/reels\/)([a-zA-Z0-9_-]+)/)?.[1] || '';
+                        postContent = `
+                            <div class="post-embed instagram-embed-container" style="display: flex; justify-content: center;">
+                                <blockquote class="instagram-media" data-instgrm-captioned data-instgrm-permalink="https://www.instagram.com/p/${shortcode}/?utm_source=ig_embed&amp;utm_campaign=loading" data-instgrm-version="12" style=" background:#FFF; border:0; border-radius:3px; box-shadow:0 0 1px 0 rgba(0,0,0,0.5),0 1px 10px 0 rgba(0,0,0,0.15); margin: 1px; max-width:540px; min-width:326px; padding:0; width:99.375%; width:-webkit-calc(100% - 2px); width:calc(100% - 2px);">
+                                    <div style="padding:16px;">
+                                        <a href="https://www.instagram.com/p/${shortcode}/?utm_source=ig_embed&amp;utm_campaign=loading" style=" background:#FFFFFF; line-height:0; padding:0 0; text-align:center; text-decoration:none; width:100%;" target="_blank">
+                                            View on Instagram
+                                        </a>
+                                    </div>
+                                </blockquote>
+                            </div>
+                        `;
+                    } else if (post.platform === 'x') {
+                        const twitterUrl = post.embedUrl.replace('x.com', 'twitter.com');
+                        postContent = `
+                            <div class="post-embed">
+                                <blockquote class="twitter-tweet" data-tweet-url="${twitterUrl}">
+                                    <a href="${twitterUrl}" target="_blank">View Tweet</a>
+                                </blockquote>
+                            </div>
+                        `;
+                    } else {
+                        // Generic/Fallback Embed
+                        postContent = `
+                            <div class="post-embed">
+                                <div class="embed-media">
+                                    <img src="${post.media}" alt="Embedded post" style="max-width: 100%; border-radius: 8px;">
+                                </div>
+                            </div>
+                        `;
+                    }
+                } else {
+                    // Standard Post
+                    postContent = `
+                        ${hasMedia ? `<div class="post-media" style="padding: 0 20px 20px;"><img src="${post.media}" alt="Post media" style="width:100%; border-radius: 12px;"></div>` : ''}
+                    `;
+                }
+
+                // Add Prominent Call-to-Action Button
+                const platformName = post.platform.charAt(0).toUpperCase() + post.platform.slice(1);
+                postContent += `
+                    <a href="${post.embedUrl || '#'}" target="_blank" class="post-cta">
+                        Lihat di ${platformName} ↗
+                    </a>
+                `;
+                postDiv.innerHTML = postContent;
+                return postDiv;
+            }
+
+
+        });
+    </script>
+</body>
+
+</html>
