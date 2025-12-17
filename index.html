@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Trending Social Media Posts</title>
+    <title>Karena Viral</title>
     <!-- TikTok Official Embed Script -->
     <script async src="https://www.tiktok.com/embed.js"></script>
     <!-- Facebook SDK -->
@@ -324,6 +324,7 @@
             overflow: hidden;
             border-bottom-left-radius: var(--radius-large);
             border-bottom-right-radius: var(--radius-large);
+            margin-bottom: 10px;
         }
 
         .post-content {
@@ -981,16 +982,18 @@
                             </div>
                         `;
                     } else if (post.platform === 'facebook') {
+                        // Custom Props: data-show-text="false" hides the caption/text
                         postContent = `
                             <div class="post-embed fb-embed-container">
-                                <div class="fb-post" data-href="${post.embedUrl}" data-width="500" data-show-text="true"></div>
+                                <div class="fb-post" data-href="${post.embedUrl}" data-width="500" data-show-text="false"></div>
                             </div>
                         `;
                     } else if (post.platform === 'instagram') {
+                        // Custom Props: Removed 'data-instgrm-captioned' to hide caption
                         const shortcode = post.embedUrl.match(/(?:\/p\/|\/reel\/|\/reels\/)([a-zA-Z0-9_-]+)/)?.[1] || '';
                         postContent = `
                             <div class="post-embed instagram-embed-container" style="display: flex; justify-content: center;">
-                                <blockquote class="instagram-media" data-instgrm-captioned data-instgrm-permalink="https://www.instagram.com/p/${shortcode}/?utm_source=ig_embed&amp;utm_campaign=loading" data-instgrm-version="12" style=" background:#FFF; border:0; border-radius:3px; box-shadow:0 0 1px 0 rgba(0,0,0,0.5),0 1px 10px 0 rgba(0,0,0,0.15); margin: 1px; max-width:540px; min-width:326px; padding:0; width:99.375%; width:-webkit-calc(100% - 2px); width:calc(100% - 2px);">
+                                <blockquote class="instagram-media" data-instgrm-permalink="https://www.instagram.com/p/${shortcode}/?utm_source=ig_embed&amp;utm_campaign=loading" data-instgrm-version="12" style=" background:#FFF; border:0; border-radius:3px; box-shadow:0 0 1px 0 rgba(0,0,0,0.5),0 1px 10px 0 rgba(0,0,0,0.15); margin: 1px; max-width:540px; min-width:326px; padding:0; width:99.375%; width:-webkit-calc(100% - 2px); width:calc(100% - 2px);">
                                     <div style="padding:16px;">
                                         <a href="https://www.instagram.com/p/${shortcode}/?utm_source=ig_embed&amp;utm_campaign=loading" style=" background:#FFFFFF; line-height:0; padding:0 0; text-align:center; text-decoration:none; width:100%;" target="_blank">
                                             View on Instagram
