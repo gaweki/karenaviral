@@ -13,7 +13,7 @@
         src="https://connect.facebook.net/en_US/sdk.js#xfbml=1&version=v18.0"></script>
     <!-- Instagram Embed Script -->
     <script async src="https://www.instagram.com/embed.js"></script>
-    <!-- X/Twitter Embed Script -->
+    <!-- X Embed Script -->
     <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Quicksand:wght@600;700&display=swap');
@@ -298,11 +298,33 @@
             font-size: 0.75rem;
             font-weight: 700;
             color: var(--text-dark);
-            z-index: 10;
+            z-index: 20;
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
             display: flex;
             align-items: center;
             gap: 5px;
+        }
+
+        .reload-btn {
+            background: #FF6B6B;
+            color: white;
+            border: none;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            font-size: 14px;
+            transition: transform 0.3s ease, background 0.3s;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            margin-left: 4px;
+        }
+
+        .reload-btn:hover {
+            transform: rotate(180deg);
+            background: #FF4757;
         }
 
         /* Content Wrappers */
@@ -684,124 +706,186 @@
 
             // Comprehensive embed initialization function
             // Lazy Load Embed Function
+            // Generic Fallback Card Generator
+            function renderFallbackCard(container, platform, url, icon, color) {
+                // Clear previous content (loader, old blockquotes)
+                container.innerHTML = '';
+                // Override container min-height for compact look
+                container.style.minHeight = '300px';
+                container.style.display = 'flex';
+
+                container.innerHTML = `
+                    <div class="fallback-card" style="
+                        background: #f8f9fa; 
+                        border: 1px dashed #ddd; 
+                        border-radius: 16px; 
+                        padding: 40px 20px; 
+                        text-align: center;
+                        display: flex;
+                        flex-direction: column;
+                        align-items: center;
+                        justify-content: center;
+                        gap: 15px;
+                        width: 100%;
+                        height: 100%;
+                    ">
+                        <div style="font-size: 40px; margin-bottom: 5px;">${icon}</div>
+                        <div>
+                            <h3 style="margin: 0; font-size: 1.1rem; color: #333;">Konten tidak tersedia</h3>
+                        </div>
+                        <a href="${url}" target="_blank" style="
+                            background: ${color}; 
+                            color: white; 
+                            text-decoration: none; 
+                            padding: 12px 25px; 
+                            border-radius: 50px; 
+                            font-weight: 600; 
+                            font-size: 0.95rem;
+                            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+                            transition: transform 0.2s;
+                            display: inline-block;
+                            margin-top: 10px;
+                        ">
+                            Lihat di ${platform} ↗
+                        </a>
+                    </div>
+                `;
+            }
+
+            // Specific Fallback Helpers
+            function showFacebookFallback(postElement, url) {
+                const container = postElement.querySelector('.fb-embed-container') || postElement;
+                renderFallbackCard(container, 'Facebook', url, '📘', '#1877F2');
+            }
+
+            function showInstagramFallback(postElement, url) {
+                const container = postElement.querySelector('.instagram-embed-container') || postElement;
+                renderFallbackCard(container, 'Instagram', url, '📸', '#E1306C');
+            }
+
+            function showTikTokFallback(postElement, url) {
+                const container = postElement.querySelector('.tiktok-embed-container') || postElement;
+                // Extract video ID for direct link usually, but strict fallback uses provided EmbedURL if valid or constructs one
+                renderFallbackCard(container, 'TikTok', url, '🎵', '#000000');
+            }
+
+            function showXFallback(postElement, url) {
+                const container = postElement.querySelector('.post-embed') || postElement;
+                // Try to find URL if not passed explicitly (helper logic)
+                let targetUrl = url;
+                if (!targetUrl) {
+                    const link = postElement.querySelector('a');
+                    if (link) targetUrl = link.href;
+                }
+                renderFallbackCard(container, 'X', targetUrl || '#', 'X', '#000000');
+            }
+
+            // Lazy Load Embed Function with Timeout & Fallback
             function loadEmbed(postElement, platform) {
                 if (postElement.dataset.loaded === 'true') return;
                 postElement.dataset.loaded = 'true';
-                console.log(`Lazy loading ${platform} embed...`);
+
+                // Get URL from the elements inside for fallback usage
+                let fallbackUrl = '#'; // Default
+                if (platform === 'facebook') {
+                    const fbDiv = postElement.querySelector('.fb-post');
+                    if (fbDiv) fallbackUrl = fbDiv.dataset.href;
+                } else if (platform === 'instagram') {
+                    const igBlock = postElement.querySelector('.instagram-media');
+                    if (igBlock) fallbackUrl = igBlock.dataset.instgrmPermalink;
+                } else if (platform === 'tiktok') {
+                    const ttBlock = postElement.querySelector('.tiktok-embed');
+                    if (ttBlock) fallbackUrl = ttBlock.getAttribute('cite');
+                } else if (platform === 'x') {
+                    const twBlock = postElement.querySelector('.twitter-tweet');
+                    if (twBlock) fallbackUrl = twBlock.dataset.tweetUrl;
+                }
+
+                console.log(`Lazy loading ${platform}...`);
 
                 if (platform === 'facebook') {
+                    let attempts = 0;
                     const processFB = () => {
                         if (typeof FB !== 'undefined') {
                             try {
                                 const fbContainer = postElement.querySelector('.fb-post');
-                                // Force re-render by clearing internal FB state if needed or just parsing
-                                if (fbContainer) {
-                                    FB.XFBML.parse(postElement);
-                                }
-                            } catch (e) { console.warn('FB Parse Error', e); }
+                                if (fbContainer) FB.XFBML.parse(postElement);
+                            } catch (e) { console.warn('FB Error', e); }
                         } else {
-                            // Retry once if SDK is still loading
-                            setTimeout(() => processFB(), 1000);
+                            attempts++;
+                            if (attempts > 60) { // 30 seconds timeout
+                                console.warn('FB Blocked/Timeout. Showing Fallback.');
+                                showFacebookFallback(postElement, fallbackUrl);
+                            } else {
+                                setTimeout(processFB, 500);
+                            }
                         }
                     };
                     processFB();
                 }
                 else if (platform === 'instagram') {
-                    // Instagram unfortunately is global, but we can try process() which scans
-                    if (typeof instgrm !== 'undefined' && instgrm.Embeds) {
-                        instgrm.Embeds.process();
-                    } else {
-                        // Reload if missing
-                        const igScript = document.createElement('script');
-                        igScript.src = "https://www.instagram.com/embed.js";
-                        igScript.async = true;
-                        igScript.onload = () => { if (window.instgrm) window.instgrm.Embeds.process(); };
-                        document.body.appendChild(igScript);
-                    }
+                    let attempts = 0;
+                    const triggerIG = () => {
+                        if (window.instgrm && window.instgrm.Embeds) {
+                            window.instgrm.Embeds.process();
+                            // Retry double check
+                            setTimeout(() => { if (window.instgrm) window.instgrm.Embeds.process(); }, 1000);
+                        } else {
+                            // Try inject if missing (for normal browsers)
+                            if (attempts === 0 && !document.querySelector('script[src*="instagram.com/embed.js"]')) {
+                                const script = document.createElement('script');
+                                script.src = "https://www.instagram.com/embed.js";
+                                script.async = true;
+                                document.body.appendChild(script);
+                            }
+
+                            attempts++;
+                            if (attempts > 60) {
+                                console.warn('IG Blocked/Timeout. Showing Fallback.');
+                                showInstagramFallback(postElement, fallbackUrl);
+                            } else {
+                                setTimeout(triggerIG, 500);
+                            }
+                        }
+                    };
+                    triggerIG();
                 }
                 else if (platform === 'x') {
-                    const tweetContainer = postElement.querySelector('.twitter-tweet');
-                    if (tweetContainer && typeof twttr !== 'undefined' && twttr.widgets) {
-                        twttr.widgets.load(postElement);
-                    }
+                    let attempts = 0;
+                    const processX = () => {
+                        if (typeof twttr !== 'undefined' && twttr.widgets) {
+                            twttr.widgets.load(postElement);
+                        } else {
+                            attempts++;
+                            if (attempts > 60) {
+                                showXFallback(postElement, fallbackUrl);
+                            } else {
+                                setTimeout(processX, 500);
+                            }
+                        }
+                    };
+                    processX();
                 }
                 else if (platform === 'tiktok') {
-                    // TikTok specific element processing if available
-                    const tiktokQuote = postElement.querySelector('.tiktok-embed');
-                    if (window.tiktokEmbed && typeof window.tiktokEmbed.process === 'function' && tiktokQuote) {
-                        window.tiktokEmbed.process(tiktokQuote);
-                    } else {
-                        // Fallback: This is heavy but necessary if API isn't exposed nicely
-                        const tiktokScript = document.querySelector('script[src*="tiktok.com/embed.js"]');
-                        if (tiktokScript) {
-                            const newScript = document.createElement('script');
-                            newScript.src = "https://www.tiktok.com/embed.js";
-                            newScript.async = true;
-                            tiktokScript.parentNode.replaceChild(newScript, tiktokScript);
+                    let attempts = 0;
+                    const processTT = () => {
+                        if (window.tiktokEmbed) {
+                            // Let official script handle it, but sometimes it needs help
+                            const tiktokQuote = postElement.querySelector('.tiktok-embed');
+                            if (tiktokQuote) window.tiktokEmbed.process(tiktokQuote);
+                        } else {
+                            attempts++;
+                            // Check for fallback iframe presence from createPostElement
+                            // If iframe fallback exists, maybe just show that? 
+                            // Using the Fallback Card is cleaner for consistency
+                            if (attempts > 60) {
+                                showTikTokFallback(postElement, fallbackUrl);
+                            } else {
+                                setTimeout(processTT, 500);
+                            }
                         }
-                    }
-                }
-            }
-
-            // Function to show TikTok fallback
-            function showTikTokFallback(embedElement) {
-                const container = embedElement.closest('.tiktok-embed-container');
-                if (container) {
-                    const fallback = container.querySelector('.tiktok-fallback');
-                    if (fallback) {
-                        fallback.style.display = 'block';
-                        embedElement.style.display = 'none';
-
-                        // Lazy load the iframe content
-                        const iframe = fallback.querySelector('iframe');
-                        if (iframe && iframe.dataset.src) {
-                            iframe.src = iframe.dataset.src;
-                        }
-
-                        console.log('TikTok fallback displayed');
-                    }
-                }
-            }
-
-            // Function to show Twitter/X fallback
-            function showTwitterFallback(embedElement) {
-                const container = embedElement.closest('.post-embed');
-                if (container) {
-                    // Get the tweet URL from data attribute or try to find it
-                    let tweetUrl = embedElement.getAttribute('data-tweet-url');
-                    if (!tweetUrl) {
-                        const link = embedElement.querySelector('a');
-                        if (link && link.href) {
-                            tweetUrl = link.href;
-                        }
-                    }
-
-                    if (tweetUrl) {
-                        // Create fallback content
-                        const fallback = document.createElement('div');
-                        fallback.className = 'twitter-fallback';
-                        fallback.style.cssText = `
-                            background: #000;
-                            color: #fff;
-                            padding: 20px;
-                            border-radius: 12px;
-                            text-align: center;
-                            border: 1px solid #333;
-                        `;
-
-                        fallback.innerHTML = `
-                            <div style="font-size: 24px; margin-bottom: 10px;">🐦</div>
-                            <p style="margin-bottom: 15px;">View this X/Twitter post</p>
-                            <a href="${tweetUrl}" target="_blank"
-                               style="display: inline-block; background: #1da1f2; color: white; padding: 10px 20px; border-radius: 20px; text-decoration: none; font-weight: 600;">
-                                Open on X/Twitter
-                            </a>
-                        `;
-
-                        embedElement.style.display = 'none';
-                        container.appendChild(fallback);
-                        console.log('Twitter/X fallback displayed');
-                    }
+                    };
+                    processTT();
                 }
             }
 
@@ -953,14 +1037,71 @@
                 const postDiv = document.createElement('div');
                 postDiv.className = 'post';
 
+                const hasMedia = post.media && post.media !== '';
+                const isEmbedded = post.isEmbedded || false;
+
                 // Add Platform Badge (Top Right)
                 const badge = document.createElement('div');
                 badge.className = 'platform-badge';
-                badge.innerHTML = `${platformBadges[post.platform] || '📱'} ${post.platform.charAt(0).toUpperCase() + post.platform.slice(1)}`;
+                badge.innerHTML = `
+                    <span>${platformBadges[post.platform] || '📱'} ${post.platform.charAt(0).toUpperCase() + post.platform.slice(1)}</span>
+                    ${isEmbedded ? `<button class="reload-btn" title="Reload Embed">🔄</button>` : ''}
+                `;
                 postDiv.appendChild(badge);
 
-                const hasMedia = post.media && post.media !== '';
-                const isEmbedded = post.isEmbedded || false;
+                // Handle Reload Button
+                if (isEmbedded) {
+                    const reloadBtn = badge.querySelector('.reload-btn');
+                    reloadBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        console.log('Manual reload triggered for', post.platform);
+                        postDiv.dataset.loaded = 'false';
+
+                        // Find the embed container and reset its content to trigger a fresh scan
+                        const embedContainer = postDiv.querySelector('.post-embed');
+                        if (embedContainer) {
+                            // Re-render the placeholder HTML based on platform
+                            let freshHtml = '';
+                            if (post.platform === 'tiktok') {
+                                const videoIdMatch = post.embedUrl.split('/video/')[1];
+                                const videoId = videoIdMatch ? videoIdMatch.split('?')[0] : '';
+                                freshHtml = `
+                                    <blockquote class="tiktok-embed" cite="${post.embedUrl}" data-video-id="${videoId}" style="max-width: 605px;min-width: 325px;">
+                                        <section></section>
+                                    </blockquote>
+                                    <div class="tiktok-fallback" style="display: none;">
+                                        <iframe data-src="https://www.tiktok.com/embed/v2/${videoId}"
+                                                style="width: 100%; height: 700px; border: none;"
+                                                allowfullscreen>
+                                        </iframe>
+                                    </div>
+                                `;
+                            } else if (post.platform === 'facebook') {
+                                const cleanUrl = post.embedUrl.replace(/^(https?:\/\/)(web\.|m\.|mobile\.)?facebook\.com\//, '$1www.facebook.com/');
+                                freshHtml = `<div class="fb-post" data-href="${cleanUrl}" data-width="500" data-show-text="true"></div>`;
+                            } else if (post.platform === 'instagram') {
+                                const shortcode = post.embedUrl.match(/(?:\/p\/|\/reel\/|\/reels\/)([a-zA-Z0-9_-]+)/)?.[1] || '';
+                                freshHtml = `
+                                    <blockquote class="instagram-media" data-instgrm-captioned data-instgrm-permalink="https://www.instagram.com/p/${shortcode}/?utm_source=ig_embed&amp;utm_campaign=loading" data-instgrm-version="12" style=" background:#FFF; border:0; border-radius:3px; box-shadow:0 0 1px 0 rgba(0,0,0,0.5),0 1px 10px 0 rgba(0,0,0,0.15); margin: 1px; max-width:540px; min-width:326px; padding:0; width:99.375%; width:-webkit-calc(100% - 2px); width:calc(100% - 2px);">
+                                    </blockquote>
+                                `;
+                            } else if (post.platform === 'x') {
+                                const twitterUrl = post.embedUrl.replace('x.com', 'twitter.com');
+                                freshHtml = `
+                                    <blockquote class="twitter-tweet" data-tweet-url="${twitterUrl}">
+                                        <a href="${twitterUrl}" target="_blank">View Post on X</a>
+                                    </blockquote>
+                                `;
+                            }
+
+                            if (freshHtml) {
+                                embedContainer.innerHTML = freshHtml;
+                                loadEmbed(postDiv, post.platform);
+                            }
+                        }
+                    });
+                }
+
 
                 let postContent = '';
 
@@ -1007,7 +1148,7 @@
                         postContent = `
                             <div class="post-embed">
                                 <blockquote class="twitter-tweet" data-tweet-url="${twitterUrl}">
-                                    <a href="${twitterUrl}" target="_blank">View Tweet</a>
+                                    <a href="${twitterUrl}" target="_blank">View Post on X</a>
                                 </blockquote>
                             </div>
                         `;
